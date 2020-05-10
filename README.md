@@ -35,3 +35,6 @@ new Example().start().tryResult() // return result at once (may not get any resu
 ```
 # Rough workflow
 ![flow image](./doc/programChart.png)
+=======
+# FFmpegClipper
+Cutom library for FFmpeg wrapper in java
