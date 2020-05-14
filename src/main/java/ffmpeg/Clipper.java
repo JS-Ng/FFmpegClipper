@@ -1,9 +1,7 @@
 package ffmpeg;
 
-import ffmpeg.core.FFmpeg;
-import ffmpeg.core.scanner.ClasspathScanner;
+import ffmpeg.core.scanner.ClassPathScanner;
 import ffmpeg.util.FFmpegReflectionUtils;
-import org.reflections.Reflections;
 
 import java.util.logging.Logger;
 
@@ -17,7 +15,7 @@ import java.util.logging.Logger;
 public abstract class Clipper <T>{
     static Logger logger = Logger.getLogger("cur");
     private static String FFMPEG_PACKAGE = "ffmpeg";
-    protected static ClasspathScanner scanner = ClasspathScanner.INSTANCE; // ffmpeg resource
+    protected static ClassPathScanner scanner = ClassPathScanner.INSTANCE; // ffmpeg resource
     // initialize the whole clipper, load the whole classes to memory for later reference
     // TODO: get initialize process
     public static void init() {

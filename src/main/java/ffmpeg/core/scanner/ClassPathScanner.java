@@ -9,18 +9,21 @@ import java.util.stream.Collectors;
 /**
  * Scan classes in a parallel way
  * */
-public enum ClasspathScanner {
+public enum ClassPathScanner {
     INSTANCE;
+    /**
+     * maintain the method dependency
+     * */
+
     Set<Class<?>> classSet;
-    
-    private ClasspathScanner() {
+    private ClassPathScanner() {
         this.classSet = new HashSet<>();
     }
 
     public void init() {
         this.classSet.clear();
     }
-    public ClasspathScanner scanClippable(String packageName) {
+    public ClassPathScanner scanClippable(String packageName) {
         Reflections ref = new Reflections(packageName);
         classSet.addAll(ref.getTypesAnnotatedWith(Clippable.class));
         return this;

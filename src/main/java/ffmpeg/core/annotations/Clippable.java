@@ -13,6 +13,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Clippable {
-    boolean joint() default false;
+    boolean joint() default false; // joint is for joint task , TODO: implement this feature
     Class<?> classType();
 }
