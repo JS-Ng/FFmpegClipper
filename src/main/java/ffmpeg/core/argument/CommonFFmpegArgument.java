@@ -7,44 +7,44 @@ import java.util.List;
 /**
  * Returns the command line argument for video clip
  * */
-public final class FFmpegArgument {
+public final class CommonFFmpegArgument {
     private final List<Arguments<?>> arguments;
-    public FFmpegArgument() {
+    public CommonFFmpegArgument() {
         this.arguments = new LinkedList<>();
         arguments.add(Constants.FFMPEG.getArg());
     }
 
-    public FFmpegArgument enableCopy() {
+    public CommonFFmpegArgument enableCopy() {
         arguments.add(Constants.CLIP_COPY.getArg());
         return this;
     }
 
-    public FFmpegArgument setStartTime(String startFormat) {
+    public CommonFFmpegArgument setStartTime(String startFormat) {
         arguments.add(Constants.CLIP_START.getArg().addParam(startFormat));
         return this;
     }
 
-    public FFmpegArgument setEndTime(String endFormat) {
+    public CommonFFmpegArgument setEndTime(String endFormat) {
         arguments.add(Constants.CLIP_END.getArg().addParam(endFormat));
         return this;
     }
 
-    public FFmpegArgument src(String fileName) {
+    public CommonFFmpegArgument src(String fileName) {
         arguments.add(Constants.INPUT_FILE.getArg().addParam(fileName));
         return this;
     }
-    public FFmpegArgument setEncoding(String encoding) {
+    public CommonFFmpegArgument setEncoding(String encoding) {
         arguments.add(Constants.CLIP_ENCODING.getArg().addParam(encoding));
         return this;
     }
     /**
      * Destination file
      * */
-    public FFmpegArgument dest(String fileName) {
+    public CommonFFmpegArgument dest(String fileName) {
         arguments.add(Constants.PURE_ARGS.getArg().addParam(fileName));
         return this;
     }
-    public FFmpegArgument toStdin() {
+    public CommonFFmpegArgument toStdin() {
         arguments.add(Constants.PIPE_STDIN.getArg());
         return this;
     }

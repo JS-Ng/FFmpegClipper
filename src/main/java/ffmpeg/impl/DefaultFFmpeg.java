@@ -1,7 +1,7 @@
 package ffmpeg.impl;
 
 import ffmpeg.core.FFmpeg;
-import ffmpeg.core.argument.FFmpegArgument;
+import ffmpeg.core.argument.CommonFFmpegArgument;
 import ffmpeg.core.annotations.Clippable;
 import ffmpeg.job.CommandLineJob;
 import ffmpeg.job.JobPool;
@@ -14,7 +14,7 @@ public class DefaultFFmpeg extends FFmpeg {
     private static String defaultFormat = "ismv";
     private AbstractProbe probe;
     private JobResult result;
-    FFmpegArgument arg = new FFmpegArgument();
+    CommonFFmpegArgument arg = new CommonFFmpegArgument();
 
     @Override
     public DefaultFFmpeg src(String fileName) {

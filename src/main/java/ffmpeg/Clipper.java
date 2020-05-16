@@ -24,7 +24,6 @@ public abstract class Clipper <T>{
     public static void initClipper() {
         init();
         String currentPackage = FFmpegReflectionUtils.getCurrentPackage();
-        loadFFmpegPackage();
         loadFFmpegPackage(currentPackage);
     }
 
@@ -33,7 +32,7 @@ public abstract class Clipper <T>{
     }
 
     private static void loadFFmpegPackage(String packageName) {
-
+        loadFFmpegPackage(); // load default package
     }
     /**
      * get Result after we click start()

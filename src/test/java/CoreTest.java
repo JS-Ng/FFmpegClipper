@@ -1,6 +1,6 @@
 import ffmpeg.core.argument.Arguments;
 import ffmpeg.core.argument.Constants;
-import ffmpeg.core.argument.FFmpegArgument;
+import ffmpeg.core.argument.CommonFFmpegArgument;
 import ffmpeg.util.ArrayUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -44,7 +44,7 @@ public class CoreTest {
     @Test
     public void testFFArguments() {
         String expected = "ffmpeg -i input.wmv -f ismv -c copy -t 00:00:10 pipe:1";
-        String result = new FFmpegArgument().
+        String result = new CommonFFmpegArgument().
                             src("input.wmv").
                             setEncoding("ismv").
                             enableCopy().
