@@ -1,4 +1,4 @@
-package ffmpeg.job;
+package ffmpeg.core;
 
 public class JobResult {
     private Object result;

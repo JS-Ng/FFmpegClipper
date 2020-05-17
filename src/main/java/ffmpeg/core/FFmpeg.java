@@ -1,12 +1,8 @@
 package ffmpeg.core;
 
-import ffmpeg.impl.DefaultFFmpeg;
-import ffmpeg.job.CommandLineJob;
-import ffmpeg.job.Job;
 import ffmpeg.job.JobPool;
-import ffmpeg.job.JobResult;
 import ffmpeg.probe.AbstractProbe;
-import ffmpeg.probe.FFmpegProbe;
+
 /**
  * Core class. the java interface of ffmpeg
  * */
