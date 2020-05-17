@@ -5,7 +5,7 @@ import ffmpeg.core.argument.CommonFFmpegArgument;
 import ffmpeg.core.annotations.Clippable;
 import ffmpeg.job.CommandLineJob;
 import ffmpeg.job.JobPool;
-import ffmpeg.job.JobResult;
+import ffmpeg.core.JobResult;
 import ffmpeg.probe.AbstractProbe;
 import ffmpeg.util.ArrayUtils;
 

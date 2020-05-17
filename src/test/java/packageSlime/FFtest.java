@@ -3,7 +3,7 @@ package packageSlime;
 import ffmpeg.core.FFmpeg;
 import ffmpeg.core.annotations.Clippable;
 import ffmpeg.job.JobPool;
-import ffmpeg.job.JobResult;
+import ffmpeg.core.JobResult;
 import ffmpeg.probe.AbstractProbe;
 
 @Clippable(classType = FFtest.class)
