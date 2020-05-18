@@ -4,6 +4,7 @@ import ffmpeg.core.JobResult;
 import ffmpeg.core.scanner.errors.DuplicateDependencyException;
 import ffmpeg.core.scanner.errors.MainDefinitionException;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.BiFunction;
@@ -23,7 +24,10 @@ public class FunctionPool {
     Object instance;
     Map<String, Node> nodeInfo = new HashMap<>(); // actual node inside the pool
     Map<String, List<Node>> dependCache = new HashMap<>(); // cache when inserting a node
-    public static class Node {
+    public static class Node implements Iterable <Node>{
+        Object input = null;
+        Object cached_result = null;
+        boolean isCached = false;
         String name;
         Method method;
         List<Node> children = new LinkedList<>();
@@ -36,10 +40,18 @@ public class FunctionPool {
             this(name);
             this.method = method;
         }
+        public boolean isLeaf() {
+            return this.children.size() == 0;
+        }
         @Override
         public boolean equals(Object obj) {
             Node other = (Node) obj;
             return other.name.equals(this.name);
+        }
+
+        @Override
+        public Iterator<Node> iterator() {
+            return this.children.iterator();
         }
     }
     public FunctionPool(){
@@ -97,17 +109,68 @@ public class FunctionPool {
      * This method will get the expected result according to the bifunction passed into it, and return a list of them
      * processFunc: function to deal with method reflection and return the job result
      * */
-    public <T> List<JobResult> getResult(BiFunction<Method, Object, JobResult> processFunc) {
+    public <T> List<JobResult> getResult(BiFunction<Method, Object, Object> processFunc) throws IllegalAccessException, InvocationTargetException {
         // TODO: implement the result list return according to node
         ensureSafety(); // cache should be empty when getResult() is called
         List<JobResult> result = new ArrayList<>();
         Stack<Node> runtimeStack = new Stack<>();
-        runtimeStack.push(root);
+        // the first layer is the most special
+        for (Node child : root) {
+
+           if (child.isLeaf()) {
+               JobResult rs = new JobResult();
+               if (child.isCached) rs.set(child.cached_result);
+               else {
+                   child.cached_result = processFunc.apply(child.method, instance);
+                   child.isCached = true;
+               }
+               result.add(rs);
+           }
+
+           else {
+               if (!child.isCached) {
+                   child.cached_result = processFunc.apply(child.method, instance);
+                   child.isCached = true; // if not cached, must cache it immediately
+               }
+               runtimeStack.push(child);
+               // prepare input for subchildren
+               for (Node subChild : child) {
+                   subChild.input = child.cached_result;
+               }
+           }
+        }
+
         while (!runtimeStack.isEmpty()) {
             Node cur_node = runtimeStack.pop();
+            if (!cur_node.name.equals(ROOT_NAME) &&
+                    cur_node.isLeaf()) {
+                if (cur_node.isCached) {result.add(new JobResult(cur_node.cached_result));}
+                else {
+                    cur_node.cached_result = cur_node.method.invoke(instance, cur_node.input); // get the true input
+                    cur_node.isCached = true;
+                    result.add(new JobResult(cur_node.cached_result)); // one job finished when reaching the bottom
+                }
+
+            }
+            else if (cur_node.isCached) {
+                Object inheritResult = cur_node.cached_result;
+                for (Node child : cur_node) {
+                    child.input = inheritResult;
+                    runtimeStack.push(child); // return the cached result to the children, making program faster
+                }
+            }
+
+            else {
+                cur_node.cached_result = cur_node.method.invoke(this.instance, cur_node.input);
+                cur_node.isCached = true;
+                for (Node child: cur_node) {
+                    child.input = cur_node.cached_result;
+                    runtimeStack.push(child); // compute the raw result if this node is not cached
+                }
+            }
 
         }
-        return null;
+        return result;
     }
     /**
      * aggregator: function to map the final results together
@@ -129,5 +192,4 @@ public class FunctionPool {
         this.dependCache = new HashMap<>();
         System.gc(); // to reduce possible full gc after init the framework
     }
-
 }

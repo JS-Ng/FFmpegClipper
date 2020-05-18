@@ -12,4 +12,7 @@ public class FFmpegReflectionUtils {
             throw new RuntimeException("Couldn't launch the ffmpeg clipper because: " + e);
         }
     }
+    public static <P, C> boolean isSubType(Class<P> parent, Class<C> child) {
+        return parent.isAssignableFrom(child);
+    }
 }

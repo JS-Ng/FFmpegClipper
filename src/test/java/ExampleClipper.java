@@ -13,6 +13,6 @@ public class ExampleClipper extends Clipper <InputStream>{
 
     @Main
     public void haha(DefaultFFmpeg ffmpeg) {
-        stream = (InputStream) ffmpeg.enableCopy().startTime(0).runJob().getJobResult().get();
+//        stream = (InputStream) ffmpeg.enableCopy().startTime(0).runJob().getJobResult().get();
     }
 }

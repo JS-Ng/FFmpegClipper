@@ -1,3 +1,5 @@
+import ffmpeg.core.FFmpeg;
+import ffmpeg.impl.DefaultFFmpeg;
 import ffmpeg.util.ArrayUtils;
 import ffmpeg.util.FFmpegReflectionUtils;
 import org.junit.Assert;
@@ -17,5 +19,10 @@ public class UtilTest {
         String expected = "";
         String result = FFmpegReflectionUtils.getCurrentPackage();
         Assert.assertEquals(expected, result);
+    }
+    @Test
+    public void testReflectionSubtypeCheck() {
+        Assert.assertTrue(FFmpegReflectionUtils.isSubType(FFmpeg.class, DefaultFFmpeg.class));
+        Assert.assertFalse(FFmpegReflectionUtils.isSubType(FFmpeg.class, CoreTest.class));
     }
 }
