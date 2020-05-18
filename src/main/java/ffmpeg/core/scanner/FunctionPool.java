@@ -12,7 +12,7 @@ import java.util.function.BiFunction;
 /**
  * AS indicated in main method
  * maintains a multiway tree, which is maintained for dependency management
- * This pool currently supports serial implementation, TODO: add parallel run
+ * This pool currently supports serial implementation, TODO: add parallel run, each time we have a new client, resolve the synchronization issue
  * */
 public class FunctionPool {
     /**
@@ -25,9 +25,9 @@ public class FunctionPool {
     Map<String, Node> nodeInfo = new HashMap<>(); // actual node inside the pool
     Map<String, List<Node>> dependCache = new HashMap<>(); // cache when inserting a node
     public static class Node implements Iterable <Node>{
-        Object input = null;
         Object cached_result = null;
         boolean isCached = false;
+        boolean shouldCache = false;
         String name;
         Method method;
         List<Node> children = new LinkedList<>();
@@ -61,18 +61,21 @@ public class FunctionPool {
         this();
         this.instance = instance;
     }
-
     public FunctionPool insert(Method method) {
-        return this.insert(method, ROOT_NAME);
+        return this.insert(method, false);
+    }
+    public FunctionPool insert(Method method, boolean shouldCache) {
+        return this.insert(method, ROOT_NAME, shouldCache);
     }
 
-    public FunctionPool insert(Method method, String dependsOn) {
+    public FunctionPool insert(Method method, String dependsOn, boolean shouldCache) {
         if (dependsOn.equals(method.getName())) {
             throw new DuplicateDependencyException("Dependency name and method name should not be defined same: "
                                                     + method.getName() + "at " +
                                                     method.getDeclaringClass().getName());
         }
         Node insertTarget = new Node(method.getName(), method);
+        insertTarget.shouldCache = shouldCache;
         if (nodeInfo.containsKey(insertTarget.name)) {
             throw new DuplicateDependencyException("Cannot use overload with @main");
         }
@@ -114,63 +117,98 @@ public class FunctionPool {
         ensureSafety(); // cache should be empty when getResult() is called
         List<JobResult> result = new ArrayList<>();
         Stack<Node> runtimeStack = new Stack<>();
+        Stack<Object> andThenStack = new Stack<>();
         // the first layer is the most special
         for (Node child : root) {
-
            if (child.isLeaf()) {
                JobResult rs = new JobResult();
                if (child.isCached) rs.set(child.cached_result);
                else {
-                   child.cached_result = processFunc.apply(child.method, instance);
-                   child.isCached = true;
+                   if (child.shouldCache) {
+                       synchronized (this) {
+                           child.cached_result = processFunc.apply(child.method, instance);
+                           child.isCached = true;
+                       }
+                   }
                }
                result.add(rs);
            }
 
            else {
+               Object computeResult;
                if (!child.isCached) {
-                   child.cached_result = processFunc.apply(child.method, instance);
-                   child.isCached = true; // if not cached, must cache it immediately
+                   if (child.shouldCache) {
+                       synchronized (this) {
+                           child.cached_result = processFunc.apply(child.method, instance);
+                           child.isCached = true; // if not cached, must cache it immediately
+                           computeResult = child.cached_result;
+                       }
+                   }
+
+                   else {
+                       computeResult = processFunc.apply(child.method, instance);
+                   }
                }
-               runtimeStack.push(child);
-               // prepare input for subchildren
+
+               else {
+                   computeResult = processFunc.apply(child.method, instance);
+               }
                for (Node subChild : child) {
-                   subChild.input = child.cached_result;
+                   andThenStack.push(computeResult);
+                   runtimeStack.push(subChild);
+                   proceedWithRuntimeStack(runtimeStack, andThenStack, result);
                }
            }
         }
 
+        return result;
+    }
+
+    private void proceedWithRuntimeStack(Stack<Node> runtimeStack, Stack<Object> varStack, List<JobResult> result) throws InvocationTargetException, IllegalAccessException {
         while (!runtimeStack.isEmpty()) {
             Node cur_node = runtimeStack.pop();
+            Object input = varStack.pop();
             if (!cur_node.name.equals(ROOT_NAME) &&
                     cur_node.isLeaf()) {
                 if (cur_node.isCached) {result.add(new JobResult(cur_node.cached_result));}
                 else {
-                    cur_node.cached_result = cur_node.method.invoke(instance, cur_node.input); // get the true input
-                    cur_node.isCached = true;
-                    result.add(new JobResult(cur_node.cached_result)); // one job finished when reaching the bottom
+                    if (cur_node.shouldCache) {
+                        Object cachedVal;
+                        synchronized (this) {
+                            cachedVal = cur_node.method.invoke(instance, input);
+                            cur_node.cached_result = cachedVal; // get the true input
+                            cur_node.isCached = true;
+                        }
+                        result.add(new JobResult(cachedVal)); // one job finished when reaching the bottom
+
+                    }
                 }
 
             }
             else if (cur_node.isCached) {
                 Object inheritResult = cur_node.cached_result;
                 for (Node child : cur_node) {
-                    child.input = inheritResult;
                     runtimeStack.push(child); // return the cached result to the children, making program faster
+                    varStack.push(inheritResult);
                 }
             }
 
             else {
-                cur_node.cached_result = cur_node.method.invoke(this.instance, cur_node.input);
-                cur_node.isCached = true;
+                Object inheritResult = cur_node.method.invoke(this.instance, input);
+                if (cur_node.shouldCache) {
+                    synchronized (this) {
+                        cur_node.cached_result = inheritResult;
+                        cur_node.isCached = true;
+                    }
+                }
+
                 for (Node child: cur_node) {
-                    child.input = cur_node.cached_result;
+                    varStack.push(inheritResult);
                     runtimeStack.push(child); // compute the raw result if this node is not cached
                 }
             }
 
         }
-        return result;
     }
     /**
      * aggregator: function to map the final results together

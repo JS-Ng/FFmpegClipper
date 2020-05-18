@@ -14,4 +14,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Main {
     String dependsOn() default "_root_"; // default root implementation
+    boolean shouldCache() default false;
 }
