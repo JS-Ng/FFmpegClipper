@@ -1,6 +1,7 @@
 package ffmpeg;
 
 import ffmpeg.core.scanner.ClassPathScanner;
+import ffmpeg.core.scanner.FunctionPool;
 import ffmpeg.util.FFmpegReflectionUtils;
 
 import java.util.logging.Logger;
@@ -16,6 +17,7 @@ public abstract class Clipper <T>{
     static Logger logger = Logger.getLogger("cur");
     private static String FFMPEG_PACKAGE = "ffmpeg";
     protected static ClassPathScanner scanner = ClassPathScanner.INSTANCE; // ffmpeg resource
+    FunctionPool pool = new FunctionPool(this); // each clipper maintains a new instance of execution
     // initialize the whole clipper, load the whole classes to memory for later reference
     // TODO: get initialize process
     public static void init() {

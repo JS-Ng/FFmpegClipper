@@ -26,7 +26,7 @@ public class FunctionPool {
     Map<String, List<Node>> dependCache = new HashMap<>(); // cache when inserting a node
     public static class Node implements Iterable <Node>{
         Object cached_result = null;
-        boolean isCached = false;
+        volatile boolean isCached = false;
         boolean shouldCache = false;
         String name;
         Method method;
@@ -54,11 +54,9 @@ public class FunctionPool {
             return this.children.iterator();
         }
     }
-    public FunctionPool(){
-        nodeInfo.put("_root_", new Node());
-    }
+
     public FunctionPool(Object instance) {
-        this();
+        nodeInfo.put("_root_", new Node());
         this.instance = instance;
     }
     public FunctionPool insert(Method method) {
@@ -113,7 +111,6 @@ public class FunctionPool {
      * processFunc: function to deal with method reflection and return the job result
      * */
     public <T> List<JobResult> getResult(BiFunction<Method, Object, Object> processFunc) throws IllegalAccessException, InvocationTargetException {
-        // TODO: implement the result list return according to node
         ensureSafety(); // cache should be empty when getResult() is called
         List<JobResult> result = new ArrayList<>();
         Stack<Node> runtimeStack = new Stack<>();
